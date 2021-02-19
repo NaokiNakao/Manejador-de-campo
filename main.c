@@ -37,13 +37,32 @@
 
 /* Prototipos de función */
 
-int selectOption(int*);
+void selectOption(int*);
+void textFieldRequirements(int*, int*, char*);
 
 int main()
 {
    int type_field;
 
    selectOption(&type_field);
+
+   /* Pidiendo requerimientos según la opción seleccionada */
+
+   if (type_field == OPT_1) // campo tipo texto
+   {
+      int length, bool_space;
+      char pattern;
+
+      textFieldRequirements(&length, &bool_space, &pattern);
+   }
+   else if (type_field == OPT_2)
+   {
+
+   }
+   else if (type_field == OPT_3)
+   {
+
+   }
 
    return 0;
 }
@@ -54,7 +73,7 @@ int main()
    Objetivo    : capturar y validar la opción
    Retorno     : ---
 */
-int selectOption(int* option)
+void selectOption(int* option)
 {
    do {
       gotoxy(INI_X+10, INI_Y);
@@ -68,10 +87,65 @@ int selectOption(int* option)
       printf("\nDigite el n%cmero de la opci%cn : ", 163, 162);
       scanf("%d", option);
       clrscr();
-   } while ((*option) != OPT_1 && *(option) != OPT_2 && *(option) != OPT_3);
+   } while (*option != OPT_1 && *option != OPT_2 && *option != OPT_3);
 
    return;
 }
+
+/*
+   Función     : textFieldRequirements
+   Arrgumentos : int* lenght     : almacenará el tamaño del texto
+                 int* bool_space : indicará si se restringe a solo un espacio
+                 char* pattern   : guardará un patrón aceptado (si se indica)
+   Objetivo    : capturar los requerimientos para el campo de texto
+   Retorno     : ---
+*/
+void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
+{
+   char key;
+
+   gotoxy(INI_X, INI_Y+2);
+
+   do { // validando tamaño del texto
+
+      printf("Tama%co del campo [1-70] : ", 164);
+      scanf("%d", lenght);
+
+      if ((*lenght) <= 0 || (*lenght) > MAX-10)
+         printf("[ERROR] : tama%co no v%clido.\n\n", 164, 160);
+
+   } while (*lenght <= 0 || *lenght > MAX-10);
+
+   do { // especificando si se limita a solo un espacio entre letras
+
+      printf("\n%cRestringido a solo un espacio entre letras?\nS(i) o N(o): ", 168);
+      key = toupper(getch());
+
+   } while (key != 'S' && key != 'N');
+
+   if (key == 'S')
+      *bool_sapce = TRUE;
+   else
+      *bool_sapce = FALSE;
+
+   // capturando patrón aceptado
+
+   pattern = (char*)malloc((*lenght)*sizeof(char));
+   fflush(stdin);
+   printf("\n\nIntroduzca el patr%cn aceptado\n(Dejar vac%co para no establecer) : ", 162, 161);
+   gets(pattern);
+
+   if (pattern != NULL)
+   {
+      int lenght_pattern = strlen(pattern);
+      pattern = (char*)realloc(pattern, lenght_pattern*sizeof(char)+1);
+      pattern[lenght_pattern+1] = NULL;
+   }
+
+   return;
+}
+
+
 
 
 
