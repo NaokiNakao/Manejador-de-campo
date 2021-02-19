@@ -37,11 +37,25 @@
 
 /* Prototipos de función */
 
+int selectOption(int*);
+
 int main()
 {
-   int option;
+   int type_field;
 
-   // seleccionando tipo de campo
+   selectOption(&type_field);
+
+   return 0;
+}
+
+/*
+   Función     : selectOption
+   Arrgumentos : int* option : referencia para almacenar la opción seleccionada
+   Objetivo    : capturar y validar la opción
+   Retorno     : ---
+*/
+int selectOption(int* option)
+{
    do {
       gotoxy(INI_X+10, INI_Y);
       printf("VALIDADOR DE CAMPO");
@@ -52,11 +66,11 @@ int main()
       printf("2- Fecha\n");
       printf("3- Num%crico\n", 130);
       printf("\nDigite el n%cmero de la opci%cn : ", 163, 162);
-      scanf("%d", &option);
+      scanf("%d", option);
       clrscr();
-   } while (option != OPT_1 && option != OPT_2 && option != OPT_3);
+   } while ((*option) != OPT_1 && *(option) != OPT_2 && *(option) != OPT_3);
 
-   return 0;
+   return;
 }
 
 
