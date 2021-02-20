@@ -17,9 +17,10 @@
 
 /* Macros */
 
-#define TRUE    1
-#define FALSE   0
-#define MAX    80
+#define TRUE        1
+#define FALSE       0
+#define MAX        80
+#define MAX_DATE   10
 
 #define RIGHT   77
 #define LEFT    75
@@ -51,7 +52,7 @@ void setColor(int, int);
 int main()
 {
    int type_field, length;
-   char* text;
+   char text[MAX] = {0};
 
    while (TRUE)
    {
@@ -75,7 +76,7 @@ int main()
       }
       else if (type_field == OPT_2) // campo tipo fecha
       {
-
+         length = MAX_DATE;
       }
       else if (type_field == OPT_3) // campo tipo numérico
       {
@@ -229,6 +230,21 @@ void showField(char* str, int pos, int n, int x, int y)
 {
    int index;
 
+   setColor(TEXT_COLOR, FIELD_COLOR);
+
+   for (index = 0; index < n; index++)
+   {
+      gotoxy(x+index+1, y);
+
+      if (*(str+index))
+         printf("%c", *(str+index));
+      else
+         printf(" ");
+   }
+
+   colorDefault();
+   gotoxy(x+pos+1, y);
+
    return;
 }
 
@@ -248,7 +264,7 @@ void setColor(int text_color, int background_color)
 /*
    Función     : colorDeafult
    Arrgumentos : ---
-   Objetivo    : establecer los colores de texto y fondo predeterminado
+   Objetivo    : establecer los colores de texto y fondo predeterminados
    Retorno     : ---
 */
 void colorDefault()
