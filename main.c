@@ -31,6 +31,9 @@
 #define INI_X    1
 #define INI_Y    1
 
+#define FIELD_COLOR   WHITE
+#define TEXT_COLOR    YELLOW
+
 #define OPT_1    1
 #define OPT_2    2
 #define OPT_3    3
@@ -42,7 +45,8 @@ void textFieldRequirements(int*, int*, char*);
 
 int main()
 {
-   int type_field;
+   int type_field, length;
+   char* text;
 
    selectOption(&type_field);
 
@@ -50,10 +54,17 @@ int main()
 
    if (type_field == OPT_1) // campo tipo texto
    {
-      int length, bool_space;
-      char pattern;
+      int bool_space, count = 0;
+      char* pattern;
 
-      textFieldRequirements(&length, &bool_space, &pattern);
+      pattern = (char*)malloc(MAX*sizeof(char));
+
+      textFieldRequirements(&length, &bool_space, pattern);
+
+      if (pattern != NULL)
+         pattern = (char*)realloc(pattern, strlen(pattern)*sizeof(char));
+
+      free(pattern);
    }
    else if (type_field == OPT_2)
    {
@@ -111,7 +122,7 @@ void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
       printf("Tama%co del campo [1-70] : ", 164);
       scanf("%d", lenght);
 
-      if ((*lenght) <= 0 || (*lenght) > MAX-10)
+      if (*lenght <= 0 || *lenght > MAX-10)
          printf("[ERROR] : tama%co no v%clido.\n\n", 164, 160);
 
    } while (*lenght <= 0 || *lenght > MAX-10);
@@ -128,19 +139,11 @@ void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
    else
       *bool_sapce = FALSE;
 
-   // capturando patrón aceptado
+   // capturando patrón aceptado (no obligatorio)
 
-   pattern = (char*)malloc((*lenght)*sizeof(char));
    fflush(stdin);
    printf("\n\nIntroduzca el patr%cn aceptado\n(Dejar vac%co para no establecer) : ", 162, 161);
    gets(pattern);
-
-   if (pattern != NULL)
-   {
-      int lenght_pattern = strlen(pattern);
-      pattern = (char*)realloc(pattern, lenght_pattern*sizeof(char)+1);
-      pattern[lenght_pattern+1] = NULL;
-   }
 
    return;
 }
