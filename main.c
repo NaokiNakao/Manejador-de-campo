@@ -44,39 +44,45 @@
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
 void numericFieldRequirements(int*, int*);
+void captureField(char*, int, int, int);
+void showField(char*, int, int, int, int);
+void setColor(int, int);
 
 int main()
 {
    int type_field, length;
    char* text;
 
-   selectOption(&type_field);
-
-   /* Pidiendo requerimientos según la opción seleccionada */
-
-   if (type_field == OPT_1) // campo tipo texto
+   while (TRUE)
    {
-      int bool_space;
-      char* pattern;
+      selectOption(&type_field);
 
-      pattern = (char*)malloc(MAX*sizeof(char));
+      /* Pidiendo requerimientos según la opción seleccionada */
 
-      textFieldRequirements(&length, &bool_space, pattern);
+      if (type_field == OPT_1) // campo tipo texto
+      {
+         int bool_space;
+         char* pattern;
 
-      if (pattern != NULL)
-         pattern = (char*)realloc(pattern, strlen(pattern)*sizeof(char));
+         pattern = (char*)malloc(MAX*sizeof(char));
 
-      free(pattern);
-   }
-   else if (type_field == OPT_2) // campo tipo fecha
-   {
+         textFieldRequirements(&length, &bool_space, pattern);
 
-   }
-   else if (type_field == OPT_3) // campo tipo numérico
-   {
-      int digits, precision;
+         if (pattern != NULL)
+            pattern = (char*)realloc(pattern, strlen(pattern)*sizeof(char));
 
-      numericFieldRequirements(&digits, &precision);
+         free(pattern);
+      }
+      else if (type_field == OPT_2) // campo tipo fecha
+      {
+
+      }
+      else if (type_field == OPT_3) // campo tipo numérico
+      {
+         int digits, precision;
+
+         numericFieldRequirements(&digits, &precision);
+      }
    }
 
    return 0;
@@ -184,6 +190,70 @@ void numericFieldRequirements(int* max_digits, int* precision)
    } while (*precision < 0 || *precision >= *max_digits);
 
    return;
+}
+
+/*
+   Función     : captureField
+   Arrgumentos : char* str : cadena de texto
+                 int n     : longitud de "str"
+                 int x     : posición en x (columnas)
+                 int y     : posición en y (filas)
+   Objetivo    : controlar la captura del texto
+   Retorno     : ---
+*/
+void captureField(char* str, int n, int x, int y)
+{
+   int pos = 0;
+   char key;
+
+   do {
+
+
+
+   } while (key != ENTER && key != ESC);
+
+   return;
+}
+
+/*
+   Función     : showField
+   Arrgumentos : char* str : cadena de texto
+                 int pos   : posición del cursor
+                 int n     : longitud de "str"
+                 int x     : posición en x (columnas)
+                 int y     : posición en y (filas)
+   Objetivo    : mostrar el campo de texto
+   Retorno     : ---
+*/
+void showField(char* str, int pos, int n, int x, int y)
+{
+   int index;
+
+   return;
+}
+
+/*
+   Función     : setColor
+   Arrgumentos : int text_color       : color del texto
+                 int background_color : color de fondo
+   Objetivo    : cambiar el color del texto y del fondo
+   Retorno     : ---
+*/
+void setColor(int text_color, int background_color)
+{
+   textcolor(text_color);
+   textbackground(background_color);
+}
+
+/*
+   Función     : colorDeafult
+   Arrgumentos : ---
+   Objetivo    : establecer los colores de texto y fondo predeterminado
+   Retorno     : ---
+*/
+void colorDefault()
+{
+   setColor(WHITE, BLACK);
 }
 
 
