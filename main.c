@@ -28,6 +28,7 @@
 #define ESC     27
 #define BKSP     8
 #define SPACE   32
+#define POINT   46
 
 #define INI_X    1
 #define INI_Y    1
@@ -48,11 +49,12 @@ void numericFieldRequirements(int*, int*);
 void captureField(char*, int, int, int);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
+void validateTextField(char*, int, int, char*);
 
 int main()
 {
    int type_field, length;
-   char text[MAX] = {0};
+   char* text;
 
    while (TRUE)
    {
@@ -72,6 +74,11 @@ int main()
          if (pattern != NULL)
             pattern = (char*)realloc(pattern, strlen(pattern)*sizeof(char));
 
+         text = (char*)calloc(length, sizeof(char));
+
+         captureField(text, length, 10, 10);
+
+         free(text);
          free(pattern);
       }
       else if (type_field == OPT_2) // campo tipo fecha
@@ -117,12 +124,12 @@ void selectOption(int* option)
 /*
    Función     : textFieldRequirements
    Arrgumentos : int* lenght     : almacenará el tamaño del texto
-                 int* bool_space : indicará si se restringe a solo un espacio
+                 int* flag       : indicará si se restringe a solo un espacio
                  char* pattern   : guardará un patrón aceptado (si se indica)
    Objetivo    : capturar los requerimientos para el campo de texto
    Retorno     : ---
 */
-void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
+void textFieldRequirements(int* lenght, int* flag, char* pattern)
 {
    char key;
 
@@ -146,9 +153,9 @@ void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
    } while (key != 'S' && key != 'N');
 
    if (key == 'S')
-      *bool_sapce = TRUE;
+      *flag = TRUE;
    else
-      *bool_sapce = FALSE;
+      *flag = FALSE;
 
    // capturando patrón aceptado (no obligatorio)
 
@@ -204,14 +211,59 @@ void numericFieldRequirements(int* max_digits, int* precision)
 */
 void captureField(char* str, int n, int x, int y)
 {
-   int pos = 0;
+   int index = 0;
    char key;
+
+   clrscr();
+   _setcursortype(100);
 
    do {
 
+      showField(str, index, n, x, y);
 
+      do {
+         key = getch();
+      } while ( !((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
+               && key != ENTER && key != ESC && key != BKSP && key != SPACE && key != POINT
+               && key != RIGHT && key != LEFT);
+
+      if (key == RIGHT)
+      {
+         if (index < n-1)
+            index++;
+      }
+      else if (key == LEFT)
+      {
+         if (index > 0)
+            index--;
+      }
+      else
+      {
+         if (key != ENTER && key != ESC)
+         {
+            if (key == BKSP)
+            {
+               if (index)
+               {
+                  index--;
+                  *(str+index) = NULL;
+               }
+            }
+            else
+            {
+               if (index < n)
+               {
+                  *(str+index) = key;
+                  index++;
+               }
+            }
+         }
+      }
 
    } while (key != ENTER && key != ESC);
+
+   if (key != ESC)
+      *(str+index) = NULL;
 
    return;
 }
@@ -230,7 +282,7 @@ void showField(char* str, int pos, int n, int x, int y)
 {
    int index;
 
-   setColor(TEXT_COLOR, FIELD_COLOR);
+   setColor(BLUE, LIGHTGRAY);
 
    for (index = 0; index < n; index++)
    {
@@ -269,7 +321,21 @@ void setColor(int text_color, int background_color)
 */
 void colorDefault()
 {
-   setColor(WHITE, BLACK);
+   setColor(LIGHTGRAY, BLACK);
+}
+
+/*
+   Función     : validateTextField
+   Arrgumentos : char* str     : cadena de texto a validar
+                 int n         : longitud de "str"
+                 int flag      : indica si se restringe a un solo espacio
+                 char* pattern : contiene el patrón aceptado
+   Objetivo    : manejar la entrada de datos en el campo tipo texto
+   Retorno     : ---
+*/
+void validateTextField(char* str, int n, int flag, char* pattern)
+{
+
 }
 
 
