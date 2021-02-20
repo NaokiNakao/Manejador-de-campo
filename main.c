@@ -31,8 +31,9 @@
 #define INI_X    1
 #define INI_Y    1
 
-#define FIELD_COLOR   WHITE
-#define TEXT_COLOR    YELLOW
+#define FIELD_COLOR    WHITE
+#define TEXT_COLOR     BLUE
+#define CURSOR_COLOR   BLACK
 
 #define OPT_1    1
 #define OPT_2    2
@@ -42,6 +43,7 @@
 
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
+void numericFieldRequirements(int*, int*);
 
 int main()
 {
@@ -54,7 +56,7 @@ int main()
 
    if (type_field == OPT_1) // campo tipo texto
    {
-      int bool_space, count = 0;
+      int bool_space;
       char* pattern;
 
       pattern = (char*)malloc(MAX*sizeof(char));
@@ -66,13 +68,15 @@ int main()
 
       free(pattern);
    }
-   else if (type_field == OPT_2)
+   else if (type_field == OPT_2) // campo tipo fecha
    {
 
    }
-   else if (type_field == OPT_3)
+   else if (type_field == OPT_3) // campo tipo numérico
    {
+      int digits, precision;
 
+      numericFieldRequirements(&digits, &precision);
    }
 
    return 0;
@@ -144,6 +148,40 @@ void textFieldRequirements(int* lenght, int* bool_sapce, char* pattern)
    fflush(stdin);
    printf("\n\nIntroduzca el patr%cn aceptado\n(Dejar vac%co para no establecer) : ", 162, 161);
    gets(pattern);
+
+   return;
+}
+
+/*
+   Función     : numericFieldRequirements
+   Arrgumentos : int* max_digits : cantidad de dígitos aceptada
+                 int* precision  : cantidad de dígitos después del punto
+   Objetivo    : capturar los requerimientos para el campo numérico
+   Retorno     : ---
+*/
+void numericFieldRequirements(int* max_digits, int* precision)
+{
+   gotoxy(INI_X, INI_Y+2);
+
+   do {
+
+      printf("Cantidad m%cxima de d%cigitos : ", 160, 161);
+      scanf("%d", max_digits);
+
+      if (*max_digits <= 0 || *max_digits > MAX-10)
+         printf("[ERROR] : cantidad no v%clida.\n\n", 160);
+
+   } while (*max_digits <= 0 || *max_digits > MAX-10);
+
+   do {
+
+      printf("\nCantidad de d%cgitos despu%cs del punto : ", 161, 130);
+      scanf("%d", precision);
+
+      if (*precision < 0 || *precision >= *max_digits)
+         printf("[ERROR] : cantidad no v%clida.\n\n", 160);
+
+   } while (*precision < 0 || *precision >= *max_digits);
 
    return;
 }
