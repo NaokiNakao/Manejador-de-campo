@@ -27,15 +27,17 @@
 #define ENTER   13
 #define ESC     27
 #define BKSP     8
-#define SPACE   32
+#define SPACE   ' '
 #define POINT   46
 
 #define INI_X    1
 #define INI_Y    1
 
-#define FIELD_COLOR    WHITE
-#define TEXT_COLOR     BLUE
-#define CURSOR_COLOR   BLACK
+#define TEXT_COLOR      BLUE
+#define BCKGRND_COLOR   LIGHTGRAY
+
+#define DTC   WHITE
+#define DBC   BLACK
 
 #define OPT_1    1
 #define OPT_2    2
@@ -46,10 +48,11 @@
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
 void numericFieldRequirements(int*, int*);
-void captureField(char*, int, int, int);
+void insertChar(char*, int*, int, int);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
-void validateTextField(char*, int, int, char*);
+void captureTextField(char*, int, int, char*);
+int validSep(char*, int, int);
 
 int main()
 {
@@ -76,7 +79,7 @@ int main()
 
          text = (char*)calloc(length, sizeof(char));
 
-         captureField(text, length, 10, 10);
+         captureTextField(text, length, bool_space, pattern);
 
          free(text);
          free(pattern);
@@ -132,8 +135,6 @@ void selectOption(int* option)
 void textFieldRequirements(int* lenght, int* flag, char* pattern)
 {
    char key;
-
-   gotoxy(INI_X, INI_Y+2);
 
    do { // validando tamaño del texto
 
@@ -201,69 +202,48 @@ void numericFieldRequirements(int* max_digits, int* precision)
 }
 
 /*
-   Función     : captureField
-   Arrgumentos : char* str : cadena de texto
-                 int n     : longitud de "str"
-                 int x     : posición en x (columnas)
-                 int y     : posición en y (filas)
-   Objetivo    : controlar la captura del texto
+   Función     : insertChar
+   Arrgumentos : char* str  : cadena de texto
+                 int n      : longitud de "str"
+                 int key    : tecla presionada
+                 int* index : indica la posición del cursor
+   Objetivo    : insertar caracter o movimiento de cursor
    Retorno     : ---
 */
-void captureField(char* str, int n, int x, int y)
+void insertChar(char* str, int* index, int n, int key)
 {
-   int index = 0;
-   char key;
-
-   clrscr();
-   _setcursortype(100);
-
-   do {
-
-      showField(str, index, n, x, y);
-
-      do {
-         key = getch();
-      } while ( !((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
-               && key != ENTER && key != ESC && key != BKSP && key != SPACE && key != POINT
-               && key != RIGHT && key != LEFT);
-
-      if (key == RIGHT)
+   if (key == RIGHT)
+   {
+      if (*index < n-1)
+         (*index)++;
+   }
+   else if (key == LEFT)
+   {
+      if (*index > 0)
+         (*index)--;
+   }
+   else
+   {
+      if (key != ENTER && key != ESC)
       {
-         if (index < n-1)
-            index++;
-      }
-      else if (key == LEFT)
-      {
-         if (index > 0)
-            index--;
-      }
-      else
-      {
-         if (key != ENTER && key != ESC)
+         if (key == BKSP)
          {
-            if (key == BKSP)
+            if (*index)
             {
-               if (index)
-               {
-                  index--;
-                  *(str+index) = NULL;
-               }
+               (*index)--;
+               *(str+(*index)) = NULL;
             }
-            else
+         }
+         else
+         {
+            if (*index < n)
             {
-               if (index < n)
-               {
-                  *(str+index) = key;
-                  index++;
-               }
+               *(str+(*index)) = key;
+               (*index)++;
             }
          }
       }
-
-   } while (key != ENTER && key != ESC);
-
-   if (key != ESC)
-      *(str+index) = NULL;
+   }
 
    return;
 }
@@ -282,7 +262,9 @@ void showField(char* str, int pos, int n, int x, int y)
 {
    int index;
 
-   setColor(BLUE, LIGHTGRAY);
+   gotoxy(x, y);
+   printf("[");
+   setColor(TEXT_COLOR, BCKGRND_COLOR);
 
    for (index = 0; index < n; index++)
    {
@@ -295,6 +277,8 @@ void showField(char* str, int pos, int n, int x, int y)
    }
 
    colorDefault();
+   gotoxy(x+index, y);
+   printf("]");
    gotoxy(x+pos+1, y);
 
    return;
@@ -321,11 +305,11 @@ void setColor(int text_color, int background_color)
 */
 void colorDefault()
 {
-   setColor(LIGHTGRAY, BLACK);
+   setColor(DTC, DBC);
 }
 
 /*
-   Función     : validateTextField
+   Función     : captureTextField
    Arrgumentos : char* str     : cadena de texto a validar
                  int n         : longitud de "str"
                  int flag      : indica si se restringe a un solo espacio
@@ -333,9 +317,50 @@ void colorDefault()
    Objetivo    : manejar la entrada de datos en el campo tipo texto
    Retorno     : ---
 */
-void validateTextField(char* str, int n, int flag, char* pattern)
+void captureTextField(char* str, int n, int flag, char* pattern)
 {
+   int index = 0;
+   char key;
 
+   system("cls");
+   _setcursortype(100);
+
+   do {
+
+      showField(str, index, n, INI_X+9, INI_Y+4);
+
+      do {
+         key = getch();
+      } while ( !((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
+               && key != ENTER && key != ESC && key != BKSP && key != SPACE && key != POINT
+               && key != RIGHT && key != LEFT);
+
+      if (flag)
+      {
+         if (!validSep(str, key, index))
+            continue;
+      }
+
+      insertChar(str, &index, n, key);
+
+   } while (key != ENTER && key != ESC);
+
+   if (key != ESC)
+      *(str+index) = NULL;
+
+   return;
+}
+
+int validSep(char* str, int key, int index)
+{
+   if (key != ENTER && key != ESC && key != BKSP && key != SPACE
+       && key != RIGHT && key != LEFT)
+   {
+      if ( !strncmp(str+index-2, "  ", 2) || !strncmp(str+index, "  ", 2) )
+         return FALSE;
+   }
+
+   return TRUE;
 }
 
 
