@@ -30,6 +30,10 @@
 #define SPACE   ' '
 #define POINT   46
 
+#define MIN_ASCII    33
+#define MAX_ASCII   126
+
+
 #define INI_X    1
 #define INI_Y    1
 
@@ -48,11 +52,10 @@
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
 void numericFieldRequirements(int*, int*);
-void insertChar(char*, int*, int, int);
+void captureText(char*, int, int, char);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
-void captureTextField(char*, int, int, char*);
-int validSep(char*, int, int);
+void colorDefault();
 
 int main()
 {
@@ -62,6 +65,7 @@ int main()
    while (TRUE)
    {
       selectOption(&type_field);
+      system("cls");
 
       /* Pidiendo requerimientos según la opción seleccionada */
 
@@ -79,9 +83,8 @@ int main()
 
          text = (char*)calloc(length, sizeof(char));
 
-         captureTextField(text, length, bool_space, pattern);
+         captureText(text, length, bool_space, pattern);
 
-         free(text);
          free(pattern);
       }
       else if (type_field == OPT_2) // campo tipo fecha
@@ -94,6 +97,9 @@ int main()
 
          numericFieldRequirements(&digits, &precision);
       }
+
+      system("cls");
+      free(text);
    }
 
    return 0;
@@ -176,8 +182,6 @@ void textFieldRequirements(int* lenght, int* flag, char* pattern)
 */
 void numericFieldRequirements(int* max_digits, int* precision)
 {
-   gotoxy(INI_X, INI_Y+2);
-
    do {
 
       printf("Cantidad m%cxima de d%cigitos : ", 160, 161);
@@ -202,48 +206,65 @@ void numericFieldRequirements(int* max_digits, int* precision)
 }
 
 /*
-   Función     : insertChar
-   Arrgumentos : char* str  : cadena de texto
-                 int n      : longitud de "str"
-                 int key    : tecla presionada
-                 int* index : indica la posición del cursor
-   Objetivo    : insertar caracter o movimiento de cursor
+   Función     : captureText
+   Arrgumentos : char* str    : cadena de texto a capturar
+                 int n        : longitud de "str"
+                 int flag     : indica si se restringe a solo un espacio
+                 char pattern : patrón de texto aceptado
+   Objetivo    : capturar campo de tipo texto
    Retorno     : ---
 */
-void insertChar(char* str, int* index, int n, int key)
+void captureText(char* str, int n, int flag, char pattern)
 {
-   if (key == RIGHT)
-   {
-      if (*index < n-1)
-         (*index)++;
-   }
-   else if (key == LEFT)
-   {
-      if (*index > 0)
-         (*index)--;
-   }
-   else
-   {
-      if (key != ENTER && key != ESC)
+   int index = 0;
+   char key;
+
+   system("cls");
+   _setcursortype(100);
+
+   do {
+
+      showField(str, index, n, INI_X+9, INI_Y+5);
+
+      do{
+         key = getch();
+      }while (!(key >= MIN_ASCII && key <= MAX_ASCII) && key != ENTER && key != ESC && key != RIGHT
+              && key != LEFT && key != POINT && key != SPACE && key != BKSP);
+
+      if (key == RIGHT)
       {
-         if (key == BKSP)
+         if (index < n-1)
+            index++;
+      }
+      else if (key == LEFT)
+      {
+         if (index > 0)
+            index--;
+      }
+      else
+      {
+         if (key != ENTER && key != ESC)
          {
-            if (*index)
+            if (key == BKSP)
             {
-               (*index)--;
-               *(str+(*index)) = NULL;
+               if (index)
+               {
+                  index--;
+                  *(str+index) = NULL;
+               }
             }
-         }
-         else
-         {
-            if (*index < n)
+            else if (index < n)
             {
-               *(str+(*index)) = key;
-               (*index)++;
+               *(str+index) = key;
+               index++;
             }
          }
       }
-   }
+
+   } while (key != ENTER && key != ESC);
+
+   if (key != ESC)
+      *(str+index) = NULL;
 
    return;
 }
@@ -308,60 +329,7 @@ void colorDefault()
    setColor(DTC, DBC);
 }
 
-/*
-   Función     : captureTextField
-   Arrgumentos : char* str     : cadena de texto a validar
-                 int n         : longitud de "str"
-                 int flag      : indica si se restringe a un solo espacio
-                 char* pattern : contiene el patrón aceptado
-   Objetivo    : manejar la entrada de datos en el campo tipo texto
-   Retorno     : ---
-*/
-void captureTextField(char* str, int n, int flag, char* pattern)
-{
-   int index = 0;
-   char key;
 
-   system("cls");
-   _setcursortype(100);
-
-   do {
-
-      showField(str, index, n, INI_X+9, INI_Y+4);
-
-      do {
-         key = getch();
-      } while ( !((key >= 'a' && key <= 'z') || (key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))
-               && key != ENTER && key != ESC && key != BKSP && key != SPACE && key != POINT
-               && key != RIGHT && key != LEFT);
-
-      if (flag)
-      {
-         if (!validSep(str, key, index))
-            continue;
-      }
-
-      insertChar(str, &index, n, key);
-
-   } while (key != ENTER && key != ESC);
-
-   if (key != ESC)
-      *(str+index) = NULL;
-
-   return;
-}
-
-int validSep(char* str, int key, int index)
-{
-   if (key != ENTER && key != ESC && key != BKSP && key != SPACE
-       && key != RIGHT && key != LEFT)
-   {
-      if ( !strncmp(str+index-2, "  ", 2) || !strncmp(str+index, "  ", 2) )
-         return FALSE;
-   }
-
-   return TRUE;
-}
 
 
 
