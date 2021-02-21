@@ -29,6 +29,7 @@
 #define BKSP     8
 #define SPACE   ' '
 #define POINT   46
+#define BAR     32
 
 #define MIN_ASCII    33
 #define MAX_ASCII   126
@@ -52,7 +53,9 @@
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
 void numericFieldRequirements(int*, int*);
-void captureText(char*, int, int, char);
+void captureTextField(char*, int, int, char);
+int validSep(char*, int);
+int strEnd(char*);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
 void colorDefault();
@@ -83,7 +86,10 @@ int main()
 
          text = (char*)calloc(length, sizeof(char));
 
-         captureText(text, length, bool_space, pattern);
+         captureTextField(text, length, bool_space, pattern);
+         gotoxy(INI_X+9, INI_Y+8);
+         printf("%s", text);
+         getch();
 
          free(pattern);
       }
@@ -214,10 +220,10 @@ void numericFieldRequirements(int* max_digits, int* precision)
    Objetivo    : capturar campo de tipo texto
    Retorno     : ---
 */
-void captureText(char* str, int n, int flag, char pattern)
+void captureTextField(char* str, int n, int flag, char pattern)
 {
-   int index = 0;
-   char key;
+   int index = 0, last = index, max_last = last;
+   char key, temp[n];
 
    system("cls");
    _setcursortype(100);
@@ -229,17 +235,30 @@ void captureText(char* str, int n, int flag, char pattern)
       do{
          key = getch();
       }while (!(key >= MIN_ASCII && key <= MAX_ASCII) && key != ENTER && key != ESC && key != RIGHT
-              && key != LEFT && key != POINT && key != SPACE && key != BKSP);
+              && key != LEFT && key != POINT && key != SPACE && key != BKSP && key != BAR);
 
       if (key == RIGHT)
       {
-         if (index < n-1)
+         if (index < n-1 && index < last)
+         {
             index++;
+         }
       }
       else if (key == LEFT)
       {
          if (index > 0)
             index--;
+      }
+      else if (key == BAR)
+      {
+         if (index < n-1 && strEnd(str) < n-1)
+         {
+            strcpy(temp, str+index);
+            strcpy(str+index, " ");
+            strcpy(str+index+1, temp);
+            index++;
+            last++;
+         }
       }
       else
       {
@@ -249,24 +268,64 @@ void captureText(char* str, int n, int flag, char pattern)
             {
                if (index)
                {
+                  strcpy(temp, str+index);
                   index--;
-                  *(str+index) = NULL;
+                  strcpy(str+index, temp);
+                  last--;
                }
             }
             else if (index < n)
             {
+               if (flag)
+               {
+                  if (!validSep(str, index))
+                     continue;
+               }
                *(str+index) = key;
                index++;
+
+               if (index > last)
+                  last = index;
             }
          }
       }
 
+      *(str+last) = NULL;
+
    } while (key != ENTER && key != ESC);
 
-   if (key != ESC)
-      *(str+index) = NULL;
-
    return;
+}
+
+/*
+   Función     : validSep
+   Arrgumentos : char* str : cadena de texto
+                 int pos   : posición del cursor
+   Objetivo    : confirmar si la separación entre letras es válida
+   Retorno     : (int) 1 si la separación es válida; (int) 0 en caso contrario
+*/
+int validSep(char* str, int pos)
+{
+   if ( !(strncmp(str+pos-2, "  ", 2)) || !(strncmp(str+pos, "  ", 2)) )
+      return FALSE;
+   else
+      return TRUE;
+}
+
+/*
+   Función     : strEnd
+   Arrgumentos : char* str : cadena de texto
+   Objetivo    : encontrar la posición del caracter NULL
+   Retorno     : (int) count : posición del caracter NULL
+*/
+int strEnd(char* str)
+{
+   int count = 0;
+
+   while (*(str+count))
+      count++;
+
+   return count;
 }
 
 /*
