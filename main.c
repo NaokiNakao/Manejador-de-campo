@@ -8,6 +8,7 @@
    3- Campo numérico
 
    Autor : Naoki Nakao
+   Fecha : 22/02/2021
 */
 
 #include <stdio.h>
@@ -38,6 +39,7 @@
 
 #define INI_X    1
 #define INI_Y    1
+#define LOGS     INI_Y+8
 
 #define TEXT_COLOR      BLUE
 #define BCKGRND_COLOR   LIGHTGRAY
@@ -54,15 +56,17 @@
 void selectOption(int*);
 void textFieldRequirements(int*, int*, char*);
 void numericFieldRequirements(int*, int*);
-void captureTextField(char*, int, int, char);
+void captureTextField(char*, int, int, char*);
 int validSep(char*, int);
 int strEnd(char*);
+int correctPattern(char*, char*);
 void captureDateField(char*, int);
 int validDate(char*);
 void captureNumericField(char*, int, int);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
 void colorDefault();
+void clearLine(int);
 
 int main()
 {
@@ -81,7 +85,7 @@ int main()
          int bool_space;
          char* pattern;
 
-         pattern = (char*)malloc(MAX*sizeof(char));
+         pattern = (char*)calloc(MAX, sizeof(char));
 
          textFieldRequirements(&length, &bool_space, pattern);
 
@@ -109,6 +113,9 @@ int main()
          captureNumericField(text, length, precision);
       }
 
+      gotoxy(INI_X, LOGS+2);
+      printf("Presione cualquier tecla.");
+      getch();
       system("cls");
       free(text);
    }
@@ -195,7 +202,7 @@ void numericFieldRequirements(int* max_digits, int* precision)
 {
    do {
 
-      printf("Cantidad m%cxima de d%cigitos : ", 160, 161);
+      printf("Cantidad m%cxima de d%cgitos : ", 160, 161);
       scanf("%d", max_digits);
 
       if (*max_digits <= 0 || *max_digits > MAX-10)
@@ -225,7 +232,7 @@ void numericFieldRequirements(int* max_digits, int* precision)
    Objetivo    : capturar campo de tipo texto
    Retorno     : ---
 */
-void captureTextField(char* str, int n, int flag, char pattern)
+void captureTextField(char* str, int n, int flag, char* pattern)
 {
    int index = 0, last = index;
    char key, temp[n];
@@ -256,13 +263,31 @@ void captureTextField(char* str, int n, int flag, char pattern)
       }
       else if (key == BAR)
       {
-         if (index < n-1 && strEnd(str) < n-1)
+         if (index < n-1 && strEnd(str) < n)
          {
             strcpy(temp, str+index);
             strcpy(str+index, " ");
             strcpy(str+index+1, temp);
             index++;
             last++;
+         }
+      }
+      else if (key == ENTER)
+      {
+         if (pattern)
+         {
+            if (!correctPattern(str, pattern))
+            {
+               key = NULL;
+               gotoxy(INI_X, LOGS);
+               setColor(WHITE, RED);
+               printf("ADVERTENCIA:");
+               colorDefault();
+               printf(" el texto no coincide con el patr%cn.", 162);
+               getch();
+               clearLine(LOGS);
+               continue;
+            }
          }
       }
       else
@@ -299,9 +324,11 @@ void captureTextField(char* str, int n, int flag, char pattern)
 
    } while (key != ENTER && key != ESC);
 
-   gotoxy(INI_X+9, INI_Y+8);
-   printf("%s", str);
-   getch();
+   gotoxy(INI_X, LOGS);
+   setColor(WHITE, BLUE);
+   printf("Texto digitado:");
+   colorDefault();
+   printf(" %s", str);
 
    return;
 }
@@ -335,6 +362,26 @@ int strEnd(char* str)
       count++;
 
    return count;
+}
+
+/*
+   Función     : captureDateField
+   Arrgumentos : char* str1 : cadena de texto 1
+                 char* str2 : cadena de texto 2
+   Objetivo    : comparar "str1" con "str2"
+   Retorno     : (int) 1 si son iguales; (int) 0 en caso contrario
+*/
+int correctPattern(char* str1, char* str2)
+{
+   int index;
+
+   for (index = 0; *(str1+index); index++)
+   {
+      if (*(str1+index) != *(str2+index))
+         return FALSE;
+   }
+
+   return TRUE;
 }
 
 /*
@@ -375,6 +422,13 @@ void captureDateField(char* str, int n)
          if (!validDate(str))
          {
             key = NULL;
+            gotoxy(INI_X, LOGS);
+            setColor(WHITE, RED);
+            printf("ADVERTENCIA:");
+            colorDefault();
+            printf(" fecha incorrecta o formato no v%clido.", 160);
+            getch();
+            clearLine(LOGS);
             continue;
          }
       }
@@ -406,9 +460,11 @@ void captureDateField(char* str, int n)
 
    } while (key != ENTER && key != ESC);
 
-   gotoxy(INI_X+9, INI_Y+8);
-   printf("%s", str);
-   getch();
+   gotoxy(INI_X, LOGS);
+   setColor(WHITE, BLUE);
+   printf("Fecha digitada:");
+   colorDefault();
+   printf(" %s", str);
 
    return;
 }
@@ -483,7 +539,98 @@ int validDate(char* date)
 */
 void captureNumericField(char* str, int digits, int precision)
 {
+   int index = 0, n = digits, last = index, flag = FALSE;
+   char key;
 
+   system("cls");
+   _setcursortype(100);
+
+   do {
+
+      showField(str, index, n, INI_X+9, INI_Y+4);
+
+      do {
+         key = getch();
+      } while (!(key >= '0' && key <= '9') && (key != POINT && !flag) && key != ENTER
+               && key != ESC && key != RIGHT && key != LEFT && key != BKSP);
+
+      if (key == RIGHT)
+      {
+         if (index < n-1 && index < last)
+            index++;
+      }
+      else if (key == LEFT)
+      {
+         if (index > 0)
+            index--;
+      }
+      else if (key == POINT)
+      {
+         if (!flag)
+         {
+            *(str+index) = key;
+            index++;
+
+            if (index > last)
+               last = index;
+         }
+      }
+      else
+      {
+         if (key != ENTER && key != ESC)
+         {
+            if (key == BKSP)
+            {
+               if (index)
+               {
+                  index--;
+                  *(str+index) = NULL;
+                  last--;
+               }
+            }
+            else if (index < n)
+            {
+               *(str+index) = key;
+               index++;
+
+               if (index > last)
+                  last = index;
+            }
+         }
+      }
+
+      flag = FALSE;
+
+      for (int count = 0; *(str+count); count++)
+      {
+         if (*(str+count) == POINT)
+         {
+            flag = TRUE;
+            if ( (n - (count+1)) > precision )
+            {
+               n = count+precision+1;
+               clearLine(INI_Y+4);
+            }
+            break;
+         }
+      }
+
+      *(str+last) = NULL;
+
+      if (flag)
+         continue;
+      else
+         n = digits;
+
+   } while (key != ENTER && key != ESC);
+
+   gotoxy(INI_X, LOGS);
+   setColor(WHITE, BLUE);
+   printf("N%cmero digitado:", 163);
+   colorDefault();
+   printf(" %s", str);
+
+   return;
 }
 
 /*
@@ -533,6 +680,8 @@ void setColor(int text_color, int background_color)
 {
    textcolor(text_color);
    textbackground(background_color);
+
+   return;
 }
 
 /*
@@ -544,6 +693,25 @@ void setColor(int text_color, int background_color)
 void colorDefault()
 {
    setColor(DTC, DBC);
+
+   return;
+}
+
+/*
+   Función     : clearLine
+   Arrgumentos : int line : línea de la consola
+   Objetivo    : borrar la línea "line"
+   Retorno     : ---
+*/
+void clearLine(int line)
+{
+   for (int index = INI_X; index <= MAX; index++)
+   {
+      gotoxy(INI_X+index, line);
+      printf(" ");
+   }
+
+   return;
 }
 
 
