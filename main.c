@@ -30,6 +30,7 @@
 #define SPACE   ' '
 #define POINT   46
 #define BAR     32
+#define SLASH   47
 
 #define MIN_ASCII    33
 #define MAX_ASCII   126
@@ -56,6 +57,9 @@ void numericFieldRequirements(int*, int*);
 void captureTextField(char*, int, int, char);
 int validSep(char*, int);
 int strEnd(char*);
+void captureDateField(char*, int);
+int validDate(char*);
+void captureNumericField(char*, int, int);
 void showField(char*, int, int, int, int);
 void setColor(int, int);
 void colorDefault();
@@ -87,21 +91,22 @@ int main()
          text = (char*)calloc(length, sizeof(char));
 
          captureTextField(text, length, bool_space, pattern);
-         gotoxy(INI_X+9, INI_Y+8);
-         printf("%s", text);
-         getch();
 
          free(pattern);
       }
       else if (type_field == OPT_2) // campo tipo fecha
       {
          length = MAX_DATE;
+         text = (char*)calloc(length, sizeof(char));
+         captureDateField(text, length);
       }
       else if (type_field == OPT_3) // campo tipo numérico
       {
-         int digits, precision;
+         int precision;
 
-         numericFieldRequirements(&digits, &precision);
+         numericFieldRequirements(&length, &precision);
+         text = (char*)calloc(length, sizeof(char));
+         captureNumericField(text, length, precision);
       }
 
       system("cls");
@@ -212,7 +217,7 @@ void numericFieldRequirements(int* max_digits, int* precision)
 }
 
 /*
-   Función     : captureText
+   Función     : captureTextField
    Arrgumentos : char* str    : cadena de texto a capturar
                  int n        : longitud de "str"
                  int flag     : indica si se restringe a solo un espacio
@@ -222,7 +227,7 @@ void numericFieldRequirements(int* max_digits, int* precision)
 */
 void captureTextField(char* str, int n, int flag, char pattern)
 {
-   int index = 0, last = index, max_last = last;
+   int index = 0, last = index;
    char key, temp[n];
 
    system("cls");
@@ -294,6 +299,10 @@ void captureTextField(char* str, int n, int flag, char pattern)
 
    } while (key != ENTER && key != ESC);
 
+   gotoxy(INI_X+9, INI_Y+8);
+   printf("%s", str);
+   getch();
+
    return;
 }
 
@@ -329,6 +338,155 @@ int strEnd(char* str)
 }
 
 /*
+   Función     : captureDateField
+   Arrgumentos : char* str    : cadena de texto a capturar
+                 int n        : longitud de "str"
+   Objetivo    : capturar campo de tipo fecha
+   Retorno     : ---
+*/
+void captureDateField(char* str, int n)
+{
+   int index = 0, last = index;
+   char key;
+
+   _setcursortype(100);
+
+   do {
+
+      showField(str, index, n, INI_X+9, INI_Y+4);
+
+      do {
+         key = getch();
+      } while (!(key >= '0' && key <= '9') && key != SLASH && key != ENTER && key != ESC
+               && key != RIGHT && key != LEFT && key != BKSP);
+
+      if (key == RIGHT)
+      {
+         if (index < n-1 && index < last)
+            index++;
+      }
+      else if (key == LEFT)
+      {
+         if (index > 0)
+            index--;
+      }
+      else if (key == ENTER)
+      {
+         if (!validDate(str))
+         {
+            key = NULL;
+            continue;
+         }
+      }
+      else
+      {
+         if (key != ENTER && key != ESC)
+         {
+            if (key == BKSP)
+            {
+               if (index)
+               {
+                  index--;
+                  *(str+index) = NULL;
+                  last--;
+               }
+            }
+            else if (index < n)
+            {
+               *(str+index) = key;
+               index++;
+
+               if (index > last)
+                  last = index;
+            }
+         }
+      }
+
+      *(str+last) = NULL;
+
+   } while (key != ENTER && key != ESC);
+
+   gotoxy(INI_X+9, INI_Y+8);
+   printf("%s", str);
+   getch();
+
+   return;
+}
+
+/*
+   Función     : validDate
+   Arrgumentos : char* date : fecha en cadena de texto
+   Objetivo    : validar que la fecha y su formato sean correctos
+   Retorno     : (int) 1 si la fecha es correcta; (int) 0 en caso contrario
+*/
+int validDate(char* date)
+{
+   int index, count;
+
+   // validando la posición de los slash
+   if (*(date+2) != SLASH && *(date+5) != SLASH)
+      return FALSE;
+
+   // validando la cantidad de números
+   for (index = 0, count = 0; index < MAX_DATE; index++)
+   {
+      if (*(date+index) >= '0' && *(date+index) <= '9')
+         count++;
+   }
+
+   if (count != 8) return FALSE;
+
+   char temp[4];
+   int day, month, year;
+
+   strncpy(temp, date, 2);
+   day = strtol(temp, NULL, 10);
+   strncpy(temp, date+3, 2);
+   month = strtol(temp, NULL, 10);
+   strncpy(temp, date+6, 4);
+   year = strtol(temp, NULL, 10);
+
+   // validando la cantidad de días en los meses
+   if (month <= 12 && month > 0 && day > 0)
+   {
+      if (month == 2)
+      {
+         if ( day == 29 && !(year % 4) )
+            return TRUE;
+
+         else if (day > 28)
+            return FALSE;
+
+         else
+            return TRUE;
+      }
+
+      if ( (day > 30) && !(month % 2) )
+         return FALSE;
+
+      else if ( (day > 31) && (month % 2) )
+         return FALSE;
+   }
+   else
+      return FALSE;
+
+   return TRUE;
+}
+
+/*
+   Función     : captureNumericField
+   Arrgumentos : char str*     : cadena de texto
+                 int digits    : cantidad de dígitos permitidos en "str"
+                 int precision : cantidad de números después del punto
+   Objetivo    : capturar campo de tipo numérico
+   Retorno     : ---
+*/
+void captureNumericField(char* str, int digits, int precision)
+{
+
+}
+
+/*
    Función     : showField
    Arrgumentos : char* str : cadena de texto
                  int pos   : posición del cursor
@@ -357,7 +515,7 @@ void showField(char* str, int pos, int n, int x, int y)
    }
 
    colorDefault();
-   gotoxy(x+index, y);
+   gotoxy(x+index+1, y);
    printf("]");
    gotoxy(x+pos+1, y);
 
