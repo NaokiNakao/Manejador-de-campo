@@ -67,6 +67,8 @@ void showField(char*, int, int, int, int);
 void setColor(int, int);
 void colorDefault();
 void clearLine(int);
+void warningMessage(char *);
+void showText(char*, char*);
 
 int main()
 {
@@ -274,18 +276,24 @@ void captureTextField(char* str, int n, int flag, char* pattern)
       }
       else if (key == ENTER)
       {
-         if (pattern)
+         if (flag)
+         {
+            for (int i = 0; *(str+i); i++)
+            {
+               if (!validSep(str, i))
+               {
+                  key = NULL;
+                  warningMessage("texto restringido a un espacio entre letras.");
+                  break;
+               }
+            }
+         }
+         else if (pattern)
          {
             if (!correctPattern(str, pattern))
             {
                key = NULL;
-               gotoxy(INI_X, LOGS);
-               setColor(WHITE, RED);
-               printf("ADVERTENCIA:");
-               colorDefault();
-               printf(" el texto no coincide con el patr%cn.", 162);
-               getch();
-               clearLine(LOGS);
+               warningMessage("el texto no coincide con el patron.");
                continue;
             }
          }
@@ -324,11 +332,7 @@ void captureTextField(char* str, int n, int flag, char* pattern)
 
    } while (key != ENTER && key != ESC);
 
-   gotoxy(INI_X, LOGS);
-   setColor(WHITE, BLUE);
-   printf("Texto digitado:");
-   colorDefault();
-   printf(" %s", str);
+   showText(str, "Texto digitado:");
 
    return;
 }
@@ -375,7 +379,7 @@ int correctPattern(char* str1, char* str2)
 {
    int index;
 
-   for (index = 0; *(str1+index); index++)
+   for (index = 0; *(str2+index); index++)
    {
       if (*(str1+index) != *(str2+index))
          return FALSE;
@@ -422,13 +426,7 @@ void captureDateField(char* str, int n)
          if (!validDate(str))
          {
             key = NULL;
-            gotoxy(INI_X, LOGS);
-            setColor(WHITE, RED);
-            printf("ADVERTENCIA:");
-            colorDefault();
-            printf(" fecha incorrecta o formato no v%clido.", 160);
-            getch();
-            clearLine(LOGS);
+            warningMessage("fecha o formato incorrecto.");
             continue;
          }
       }
@@ -460,17 +458,14 @@ void captureDateField(char* str, int n)
 
    } while (key != ENTER && key != ESC);
 
-   gotoxy(INI_X, LOGS);
-   setColor(WHITE, BLUE);
-   printf("Fecha digitada:");
-   colorDefault();
-   printf(" %s", str);
+   showText(str, "Fecha digitada:");
 
    return;
 }
 
 /*
    Función     : validDate
+
    Arrgumentos : char* date : fecha en cadena de texto
    Objetivo    : validar que la fecha y su formato sean correctos
    Retorno     : (int) 1 si la fecha es correcta; (int) 0 en caso contrario
@@ -624,11 +619,7 @@ void captureNumericField(char* str, int digits, int precision)
 
    } while (key != ENTER && key != ESC);
 
-   gotoxy(INI_X, LOGS);
-   setColor(WHITE, BLUE);
-   printf("N%cmero digitado:", 163);
-   colorDefault();
-   printf(" %s", str);
+   showText(str, "Numero digitado:");
 
    return;
 }
@@ -714,6 +705,42 @@ void clearLine(int line)
    return;
 }
 
+/*
+   Función    : warningMessage
+   Argumentos : char* message : cadena de texto que contiene el mensaje
+   Objetivo   : mostrar el mensaje de error "message"
+   Retorno    : ---
+*/
+void warningMessage(char* message)
+{
+   gotoxy(INI_X, LOGS);
+   setColor(WHITE, RED);
+   printf("ADVERTENCIA:");
+   colorDefault();
+   printf(" %s", message);
+   getch();
+   clearLine(LOGS);
+
+   return;
+}
+
+/*
+   Función    : showtext
+   Argumentos : char* str     : cadena de texto a mostrar
+                char* message : cadena de texto que contiene el mensaje
+   Objetivo   : mostrar en pantalla "str"
+   Retorno    : ---
+*/
+void showText(char* str, char* message)
+{
+   gotoxy(INI_X, LOGS);
+   setColor(WHITE, BLUE);
+   printf("%s", message);
+   colorDefault();
+   printf(" %s", str);
+
+   return;
+}
 
 
 
