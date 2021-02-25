@@ -8,7 +8,7 @@
    3- Campo numérico
 
    Autor : Naoki Nakao
-   Fecha : 22/02/2021
+   Fecha : 25/02/2021
 */
 
 #include <stdio.h>
@@ -22,6 +22,9 @@
 #define FALSE       0
 #define MAX        80
 #define MAX_DATE   10
+#define DM30       30
+#define DM31       31
+#define FEB         2
 
 #define RIGHT   77
 #define LEFT    75
@@ -115,11 +118,8 @@ int main()
          captureNumericField(text, length, precision);
       }
 
-      gotoxy(INI_X, LOGS+2);
-      printf("Presione cualquier tecla.");
-      getch();
-      system("cls");
       free(text);
+      system("cls");
    }
 
    return 0;
@@ -202,7 +202,7 @@ void textFieldRequirements(int* lenght, int* flag, char* pattern)
 */
 void numericFieldRequirements(int* max_digits, int* precision)
 {
-   do {
+   do { // validando máxima cantidad de dígitos
 
       printf("Cantidad m%cxima de d%cgitos : ", 160, 161);
       scanf("%d", max_digits);
@@ -212,7 +212,7 @@ void numericFieldRequirements(int* max_digits, int* precision)
 
    } while (*max_digits <= 0 || *max_digits > MAX-10);
 
-   do {
+   do { // validando cantidad de dígitos después del punto
 
       printf("\nCantidad de d%cgitos despu%cs del punto : ", 161, 130);
       scanf("%d", precision);
@@ -242,6 +242,9 @@ void captureTextField(char* str, int n, int flag, char* pattern)
    system("cls");
    _setcursortype(100);
 
+   gotoxy(INI_X+9, INI_Y+3);
+   printf("Intoduzca el texto:");
+
    do {
 
       showField(str, index, n, INI_X+9, INI_Y+5);
@@ -265,6 +268,8 @@ void captureTextField(char* str, int n, int flag, char* pattern)
       }
       else if (key == BAR)
       {
+         // se verifica que los caracteres no se salgan del margen
+         // permitido al presionar la barra espaciadora
          if (index < n-1 && strEnd(str) < n)
          {
             strcpy(temp, str+index);
@@ -276,6 +281,8 @@ void captureTextField(char* str, int n, int flag, char* pattern)
       }
       else if (key == ENTER)
       {
+         // verificando que el espaciado sea correcto si se restringe
+         // a solo en espacio entre letras
          if (flag)
          {
             for (int i = 0; *(str+i); i++)
@@ -332,7 +339,8 @@ void captureTextField(char* str, int n, int flag, char* pattern)
 
    } while (key != ENTER && key != ESC);
 
-   showText(str, "Texto digitado:");
+   if (key != ESC)
+      showText(str, "Texto digitado:");
 
    return;
 }
@@ -402,6 +410,11 @@ void captureDateField(char* str, int n)
 
    _setcursortype(100);
 
+   gotoxy(INI_X+9, INI_Y+1);
+   printf("Formato dd/mm/yyyy Ejemplo -> 02/10/2002");
+   gotoxy(INI_X+9, INI_Y+2);
+   printf("Intoduzca la fecha:");
+
    do {
 
       showField(str, index, n, INI_X+9, INI_Y+4);
@@ -458,7 +471,8 @@ void captureDateField(char* str, int n)
 
    } while (key != ENTER && key != ESC);
 
-   showText(str, "Fecha digitada:");
+   if (key != ESC)
+      showText(str, "Fecha digitada:");
 
    return;
 }
@@ -487,8 +501,9 @@ int validDate(char* date)
 
    if (count != 8) return FALSE;
 
-   char temp[4];
-   int day, month, year;
+   char temp[MAX_DATE-6];
+   int d_months[] = {DM31, DM30-2, DM31, DM30, DM31, DM30, DM31, DM31, DM30, DM31, DM30, DM31},
+       day, month, year;
 
    strncpy(temp, date, 2);
    day = strtol(temp, NULL, 10);
@@ -500,22 +515,14 @@ int validDate(char* date)
    // validando la cantidad de días en los meses
    if (month <= 12 && month > 0 && day > 0)
    {
-      if (month == 2)
+      if (month == FEB)
       {
-         if ( day == 29 && !(year % 4) )
-            return TRUE;
-
-         else if (day > 28)
-            return FALSE;
-
-         else
+         // validando año bisiesto
+         if ( day == DM30-1 && !(year % 4) )
             return TRUE;
       }
 
-      if ( (day > 30) && !(month % 2) )
-         return FALSE;
-
-      else if ( (day > 31) && (month % 2) )
+      if (day > d_months[month-1])
          return FALSE;
    }
    else
@@ -539,6 +546,9 @@ void captureNumericField(char* str, int digits, int precision)
 
    system("cls");
    _setcursortype(100);
+
+   gotoxy(INI_X+9, INI_Y+2);
+   printf("Intoduzca el n%cmero:", 163);
 
    do {
 
@@ -619,7 +629,8 @@ void captureNumericField(char* str, int digits, int precision)
 
    } while (key != ENTER && key != ESC);
 
-   showText(str, "Numero digitado:");
+   if (key != ESC)
+      showText(str, "Numero digitado:");
 
    return;
 }
@@ -738,6 +749,9 @@ void showText(char* str, char* message)
    printf("%s", message);
    colorDefault();
    printf(" %s", str);
+   gotoxy(INI_X, LOGS+2);
+   printf("Presione cualquier tecla.");
+   getch();
 
    return;
 }
